@@ -6,7 +6,7 @@ Change for .png alpha-layer mask in line 150:"bkg_w_obj.paste(new_obj, (x, y), n
 
 Change for bounding box: line 157: "ann = [{'coordinates': {'h': h, 'w': w, 'x': x + (0.0), 'y': y + (0.0)},"
 
-Thus x&y are no longer adjusted from centroid but from lower bounds.
+Thus x&y are no longer adjusted from centroid but from lower bounds. The method is a bit hacky, but including the addition of 0.0 to x&y ensures that the output values are of floating point type rather than integers.
 
 JSON Convert.py:
 

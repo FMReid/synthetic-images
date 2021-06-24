@@ -33,15 +33,15 @@ the `Objects/` subfolder.
 Run the `create.py` script to generate hundreds/thousands of synthetic training
 images for object detection models.
 
-## Important:
-
-Make sure you generate with the argument "--ann 1" to ensure you get a .json annotation file. You can then convert this with the "JSON Convert.py" script from an IDE Terminal or CLI.
-
 ```bash
 $ python create.py
 ```
 
 Output images will be placed in the `TrainingData/` subfolder once done.
+
+## Important:
+
+Make sure you generate with the argument "--ann 1" to ensure you get a .json annotation file. You can then convert this with the "JSON Convert.py" script from an IDE Terminal or CLI.
 
 ### Args
 These are the available entrypoint arguments that you can supply at runtime. More will be added in the future.

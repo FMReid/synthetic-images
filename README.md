@@ -1,6 +1,8 @@
-# Changes:
+# Changes from original:
 
-create.py:
+https://github.com/tylerhutcherson/synthetic-images
+
+## create.py:
 
 Change for .png alpha-layer mask in line 150:"bkg_w_obj.paste(new_obj, (x, y), new_obj)" takes mask argument as 3rd positional argument in PIL.Image.paste() allowing transparent background from object.
 
@@ -8,7 +10,7 @@ Change for bounding box: line 157: "ann = [{'coordinates': {'h': h, 'w': w, 'x':
 
 Thus x&y are no longer adjusted from centroid but from lower bounds. The method is a bit hacky, but including the addition of 0.0 to x&y ensures that the output values are of floating point type rather than integers.
 
-json_convert.py:
+## json_convert.py:
 
 A script that allows you to convert the output from create.py (by default called annotations.json) into structured data (.csv file) which is easier to work with.
 

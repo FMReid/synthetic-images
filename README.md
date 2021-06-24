@@ -1,3 +1,17 @@
+# Changes:
+
+create.py:
+
+Change for .png alpha-layer mask in line 150:"bkg_w_obj.paste(new_obj, (x, y), new_obj)" takes mask argument as 3rd positional argument in PIL.Image.paste() allowing transparent background from object.
+
+Change for bounding box: line 157: "ann = [{'coordinates': {'h': h, 'w': w, 'x': x + (0.0), 'y': y + (0.0)},"
+
+Thus x&y are no longer adjusted from centroid but from lower bounds.
+
+JSON Convert.py:
+
+A script that allows you to convert the output from create.py (by default called annotations.json) into structured data (.csv file) which is easier to work with.
+
 # Creating Synthetic Image Datasets
 This tool helps create synthetic data for object detection modeling. Given
 a folder of background images and object images, this tool iterates through each

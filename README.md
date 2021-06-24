@@ -8,7 +8,7 @@ Change for bounding box: line 157: "ann = [{'coordinates': {'h': h, 'w': w, 'x':
 
 Thus x&y are no longer adjusted from centroid but from lower bounds. The method is a bit hacky, but including the addition of 0.0 to x&y ensures that the output values are of floating point type rather than integers.
 
-JSON Convert.py:
+json_convert.py:
 
 A script that allows you to convert the output from create.py (by default called annotations.json) into structured data (.csv file) which is easier to work with.
 

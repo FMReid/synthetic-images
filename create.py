@@ -5,6 +5,7 @@ import numpy as np
 import random
 import math
 from PIL import Image, ImageEnhance
+import cv2
 
 # Entrypoint Args
 parser = argparse.ArgumentParser(description='Create synthetic training data for object detection algorithms.')
@@ -24,15 +25,14 @@ parser.add_argument("-mut", "--mutate", type=bool, default=False,
                     help="Perform mutatuons to objects (rotation, brightness, shapness, contrast)")
 args = parser.parse_args()
 
-
 # Prepare data creation pipeline
 base_bkgs_path = args.backgrounds
 bkg_images = [f for f in os.listdir(base_bkgs_path) if not f.startswith(".")]
 objs_path = args.objects
 obj_images = [f for f in os.listdir(objs_path) if not f.startswith(".")]
-sizes = [0.4, 0.6, 0.8, 1, 1.2] # different obj sizes to use TODO make configurable
-count_per_size = 4 # number of locations for each obj size TODO make configurable
-annotations = [] # store annots here
+sizes = [0.4, 0.6, 0.8, 1, 1.2]  # different obj sizes to use TODO make configurable
+count_per_size = 4  # number of locations for each obj size TODO make configurable
+annotations = []  # store annots here
 output_images = args.output
 n = 1
 
@@ -41,15 +41,17 @@ n = 1
 def get_obj_positions(obj, bkg, count=1):
     obj_w, obj_h = [], []
     x_positions, y_positions = [], []
+    contours = []
     bkg_w, bkg_h = bkg.size
     # Rescale our obj to have a couple different sizes
-    obj_sizes = [tuple([int(s*x) for x in obj.size]) for s in sizes]
+    obj_sizes = [tuple([int(s * x) for x in obj.size]) for s in sizes]
     for w, h in obj_sizes:
-        obj_w.extend([w]*count)
-        obj_h.extend([h]*count)
-        max_x, max_y = bkg_w-w, bkg_h-h
+        obj_w.extend([w] * count)
+        obj_h.extend([h] * count)
+        max_x, max_y = bkg_w - w, bkg_h - h
         x_positions.extend(list(np.random.randint(0, max_x, count)))
         y_positions.extend(list(np.random.randint(0, max_y, count)))
+
     return obj_h, obj_w, x_positions, y_positions
 
 
@@ -70,10 +72,10 @@ def get_group_obj_positions(obj_group, bkg):
     bkg_w, bkg_h = bkg.size
     boxes = []
     objs = [Image.open(objs_path + obj_images[i]) for i in obj_group]
-    obj_sizes = [tuple([int(0.6*x) for x in i.size]) for i in objs]
+    obj_sizes = [tuple([int(0.6 * x) for x in i.size]) for i in objs]
     for w, h in obj_sizes:
         # set background image boundaries
-        max_x, max_y = bkg_w-w, bkg_h-h
+        max_x, max_y = bkg_w - w, bkg_h - h
         # get new box coordinates for the obj on the bkg
         while True:
             new_box = get_box(w, h, max_x, max_y)
@@ -84,31 +86,31 @@ def get_group_obj_positions(obj_group, bkg):
 
             else:
                 break  # only executed if the inner loop did NOT break
-            #print("retrying a new obj box")
+            # print("retrying a new obj box")
             continue  # only executed if the inner loop DID break
         # append our new box
         boxes.append(new_box)
     return obj_sizes, boxes
-    
+
+
 def mutate_image(img):
     # resize image for random value
     resize_rate = random.choice(sizes)
-    img = img.resize([int(img.width*resize_rate), int(img.height*resize_rate)], Image.BILINEAR)
+    img = img.resize([int(img.width * resize_rate), int(img.height * resize_rate)], Image.BILINEAR)
 
-    # rotate image for random andle and generate exclusion mask 
-    rotate_angle = random.randint(0,360)
+    # rotate image for random angle and generate exclusion mask
+    rotate_angle = random.randint(0, 360)
     mask = Image.new('L', img.size, 255)
     img = img.rotate(rotate_angle, expand=True)
     mask = mask.rotate(rotate_angle, expand=True)
 
-
     # perform some enhancements on image
     enhancers = [ImageEnhance.Brightness, ImageEnhance.Color, ImageEnhance.Contrast, ImageEnhance.Sharpness]
-    enhancers_count = random.randint(0,3)
-    for i in range(0,enhancers_count):
+    enhancers_count = random.randint(0, 3)
+    for i in range(0, enhancers_count):
         enhancer = random.choice(enhancers)
         enhancers.remove(enhancer)
-        img = enhancer(img).enhance(random.uniform(0.5,1.5))
+        img = enhancer(img).enhance(random.uniform(0.5, 1.5))
 
     return img, mask
 
@@ -128,17 +130,15 @@ if __name__ == "__main__":
             # Load the single obj
             i_path = objs_path + i
             obj_img = Image.open(i_path)
-            
 
             # Get an array of random obj positions (from top-left corner)
-            obj_h, obj_w, x_pos, y_pos = get_obj_positions(obj=obj_img, bkg=bkg_img, count=count_per_size)            
-            
+            obj_h, obj_w, x_pos, y_pos = get_obj_positions(obj=obj_img, bkg=bkg_img, count=count_per_size)
 
             # Create synthetic images based on positions
             for h, w, x, y in zip(obj_h, obj_w, x_pos, y_pos):
                 # Copy background
                 bkg_w_obj = bkg_img.copy()
-                
+
                 if args.mutate:
                     new_obj, mask = mutate_image(obj_img)
                     # Paste on the obj
@@ -147,25 +147,27 @@ if __name__ == "__main__":
                     # Adjust obj size
                     new_obj = obj_img.resize(size=(w, h))
                     # Paste on the obj
-                    bkg_w_obj.paste(new_obj, (x, y))
+                    bkg_w_obj.paste(new_obj, (x, y), new_obj)
                 output_fp = output_images + str(n) + ".png"
                 # Save the image
                 bkg_w_obj.save(fp=output_fp, format="png")
 
                 if args.annotate:
                     # Make annotation
-                    ann = [{'coordinates': {'height': h, 'width': w, 'x': x+(0.5*w), 'y': y+(0.5*h)}, 'label': i.split(".png")[0]}]
+                    ann = [{'coordinates': {'h': h, 'w': w, 'x': x + (0.0), 'y': y + (0.0)},
+                            'label': i.split(".png")[0]}]
                     # Save the annotation data
                     annotations.append({
                         "path": output_fp,
                         "annotations": ann
                     })
-                #print(n)
+                # print(n)
                 n += 1
 
         if args.groups:
             # 24 Groupings of 2-4 objs together on a single background
-            groups = [np.random.randint(0, len(obj_images) -1, np.random.randint(2, 5, 1)) for r in range(2*len(obj_images))]
+            groups = [np.random.randint(0, len(obj_images) - 1, np.random.randint(2, 5, 1)) for r in
+                      range(2 * len(obj_images))]
             # For each group of objs
             for group in groups:
                 # Get sizes and positions
@@ -184,17 +186,17 @@ if __name__ == "__main__":
                     if args.annotate:
                         # Add obj annotations
                         annot = {
-                                'coordinates': {
-                                    'height': obj_h,
-                                    'width': obj_w,
-                                    'x': int(x_pos+(0.5*obj_w)),
-                                    'y': int(y_pos+(0.5*obj_h))
-                                },
-                                'label': obj_images[i].split(".png")[0]
-                            }
+                            'coordinates': {
+                                'height': obj_h,
+                                'width': obj_w,
+                                'x': int(x_pos + (0.0)),
+                                'y': int(y_pos + (0.0))
+                            },
+                            'label': obj_images[i].split(".png")[0]
+                        }
                         ann.append(annot)
                     # Paste the obj to the background
-                    bkg_w_obj.paste(new_obj, (x_pos, y_pos))
+                    bkg_w_obj.paste(new_obj, (x_pos, y_pos), new_obj)
 
                 output_fp = output_images + str(n) + ".png"
                 # Save image
@@ -205,7 +207,7 @@ if __name__ == "__main__":
                         "path": output_fp,
                         "annotations": ann
                     })
-                #print(n)
+                # print(n)
                 n += 1
 
     if args.annotate:
@@ -218,6 +220,7 @@ if __name__ == "__main__":
         print("Saving out SFrame", flush=True)
         # Write out data to an sframe for turicreate training
         import turicreate as tc
+
         # Load images and annotations to sframes
         images = tc.load_images(output_images).sort("path")
         annots = tc.SArray(annotations).unpack(column_name_prefix=None).sort("path")

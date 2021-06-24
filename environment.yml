@@ -8,3 +8,5 @@ dependencies:
         - turicreate==5.7.1
         - Pillow
         - numpy
+        - json
+        - csv

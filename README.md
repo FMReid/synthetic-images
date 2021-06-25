@@ -4,9 +4,9 @@ https://github.com/tylerhutcherson/synthetic-images
 
 ## create.py:
 
-Change for .png alpha-layer mask in line 150:"bkg_w_obj.paste(new_obj, (x, y), new_obj)" takes mask object as 3rd positional argument in PIL.Image.paste() allowing transparent background from object.
+Change for .png alpha-layer mask in line 149:"bkg_w_obj.paste(new_obj, (x, y), new_obj)" takes mask object as 3rd positional argument in PIL.Image.paste() allowing transparent background from object.
 
-Change for bounding box: line 157: "ann = [{'coordinates': {'h': h, 'w': w, 'x': x + (0.0), 'y': y + (0.0)},"
+Change for bounding box: line 156: "ann = [{'coordinates': {'h': h, 'w': w, 'x': x + (0.0), 'y': y + (0.0)},"
 
 Thus x&y are no longer adjusted from centroid but from lower bounds. The method is a bit hacky, but including the addition of 0.0 to x&y inline ensures that the output values are always of floating point type rather than integers.
 

@@ -41,7 +41,6 @@ n = 1
 def get_obj_positions(obj, bkg, count=1):
     obj_w, obj_h = [], []
     x_positions, y_positions = [], []
-    contours = []
     bkg_w, bkg_h = bkg.size
     # Rescale our obj to have a couple different sizes
     obj_sizes = [tuple([int(s * x) for x in obj.size]) for s in sizes]
